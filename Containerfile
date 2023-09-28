@@ -41,9 +41,13 @@ COPY main-install.sh /tmp/main-install.sh
 
 COPY --from=ghcr.io/ublue-os/akmods:main-${FEDORA_MAJOR_VERSION} /rpms /tmp/akmods-rpms
 
-COPY main-sys_files /
+COPY main-sys_files /tmp/modprobe
 
-RUN /tmp/main-install.sh && \
+# Exclude kmods from Fedora 39 and future main images
+RUN if [[ ${FEDORA_MAJOR_VERSION} -le 38 ]]; then \
+        cp -rf /tmp/modprobe/* / && \
+        /tmp/main-install.sh \
+    ; fi && \
     rm -rf /tmp/* /var/*
 
 RUN ostree container commit && \
